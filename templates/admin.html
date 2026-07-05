@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — QuantumVault{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <div class="page-header fade-up flex-between">
+    <div>
+      <h1>⚙️ Admin Control Center</h1>
+      <p>Full system overview — all users, transactions, and activity.</p>
+    </div>
+    <a href="{{ url_for('admin.transactions') }}" class="btn btn-ghost">📋 All Transactions</a>
+  </div>
+
+  <!-- System Stats -->
+  <div class="stat-grid mb-3 fade-up">
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-value">{{ total_users }}</div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔒</div>
+      <div class="stat-value">{{ total_encrypted }}</div>
+      <div class="stat-label">Encryptions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔓</div>
+      <div class="stat-value">{{ total_decrypts }}</div>
+      <div class="stat-label">Decryptions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⬇️</div>
+      <div class="stat-value">{{ total_downloads }}</div>
+      <div class="stat-label">Downloads</div>
+    </div>
+  </div>
+
+  <div class="grid-2 fade-up">
+    <!-- Users Table -->
+    <div class="card" style="overflow:hidden; padding:0;">
+      <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border);">
+        <div class="section-title" style="margin-bottom:0;">👥 Registered Users</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr><th>User</th><th>Company</th><th>Role</th><th>Joined</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>
+                <div style="font-weight:600;">{{ u.username }}</div>
+                <div style="font-size:.75rem; color:var(--fg-dim);">{{ u.email }}</div>
+              </td>
+              <td style="font-size:.85rem;">{{ u.company or '—' }}</td>
+              <td><span class="badge {% if u.role == 'admin' %}badge-amber{% else %}badge-cyan{% endif %}">{{ u.role }}</span></td>
+              <td style="font-size:.8rem; white-space:nowrap;">{{ u.created_at.strftime('%d %b %Y') }}</td>
+              <td><span class="badge {% if u.is_active %}badge-green{% else %}badge-red{% endif %}">{{ 'Active' if u.is_active else 'Disabled' }}</span></td>
+              <td>
+                {% if u.role != 'admin' %}
+                <form method="POST" action="{{ url_for('admin.toggle_user', uid=u.id) }}" style="margin:0;">
+                  <button type="submit" class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-ghost{% endif %}">
+                    {{ 'Disable' if u.is_active else 'Enable' }}
+                  </button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card" style="overflow:hidden; padding:0;">
+      <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border);">
+        <div class="section-title" style="margin-bottom:0;">📋 Recent System Activity</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr><th>User</th><th>Action</th><th>Detail</th><th>IP Address</th><th>Status</th><th>Time</th></tr>
+          </thead>
+          <tbody>
+            {% for log in recent_logs %}
+            <tr>
+              <td style="font-size:.82rem;">{{ log.user.username if log.user else 'System' }}</td>
+              <td>
+                <span class="badge {% if log.action == 'ENCRYPT' %}badge-cyan{% elif log.action == 'DECRYPT' %}badge-purple{% elif log.action == 'LOGIN' %}badge-green{% elif log.action == 'DOWNLOAD' %}badge-amber{% else %}badge-cyan{% endif %}">
+                  {{ log.action }}
+                </span>
+              </td>
+              <td style="font-size:.78rem; color:var(--fg-dim); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ log.detail or '—' }}</td>
+              <td class="ip-cell" data-ip="{{ log.ip_address or '' }}" style="font-size:.78rem; color:var(--fg-dim);">
+                <span class="ip-text">{{ log.ip_address or '—' }}</span>
+                <span class="ip-location" style="display:block; font-size:.7rem; color:var(--cyan); margin-top:.2rem;"></span>
+              </td>
+              <td><span class="badge {% if log.status == 'FAILED' %}badge-red{% else %}badge-green{% endif %}">{{ log.status }}</span></td>
+              <td style="font-size:.78rem; white-space:nowrap;">{{ log.timestamp.strftime('%d %b · %H:%M') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cache = {};
+  
+  document.querySelectorAll('.ip-cell').forEach(cell => {
+    const ip = cell.dataset.ip;
+    const locSpan = cell.querySelector('.ip-location');
+    
+    // Skip empty or localhost
+    if (!ip || ip === '127.0.0.1' || ip === 'localhost') {
+      if (locSpan) locSpan.textContent = 'Localhost (Dev)';
+      return;
+    }
+
+    if (cache[ip]) {
+      locSpan.textContent = cache[ip];
+      return;
+    }
+
+    // Rate-limited API endpoint for IP details
+    fetch(`http://ip-api.com/json/${ip}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          const loc = `📍 ${data.city}, ${data.country}`;
+          locSpan.textContent = loc;
+          cache[ip] = loc;
+        } else {
+          locSpan.textContent = 'Unknown location';
+        }
+      })
+      .catch(() => {
+        locSpan.textContent = 'Lookup failed';
+      });
+  });
+});
+</script>
+{% endblock %}

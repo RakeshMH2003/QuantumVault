@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}QuantumVault — Quantum-Resistant Cryptographic Security{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <div class="hero fade-up">
+    <div class="hero-badge">🛡️ &nbsp; Military-Grade Quantum Security</div>
+    <h1>
+      Secure Data Transfer with<br/>
+      <span class="gradient-text">Quantum-Resistant</span><br/>
+      Cryptography
+    </h1>
+    <p>QuantumVault enables cross-company secure information transfer. Encrypt sensitive data, share a single QRC code — recipients decrypt it instantly with verified credentials.</p>
+    <div class="hero-cta">
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">🚀 Get Started Free</a>
+      <a href="{{ url_for('auth.login') }}"    class="btn btn-ghost   btn-lg">🔑 Sign In</a>
+    </div>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card fade-up">
+      <div class="feature-icon">🔒</div>
+      <h3>Fernet Encryption</h3>
+      <p>AES-128-CBC with HMAC-SHA256 authentication ensures your data is unbreakable in transit and at rest inside PostgreSQL.</p>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">🔑</div>
+      <h3>QRC Code Sharing</h3>
+      <p>Every encrypted payload generates a unique QRC code. Share only the code — the recipient decrypts with their credentials.</p>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">🏢</div>
+      <h3>Cross-Company Transfer</h3>
+      <p>Company A encrypts and shares the code with Company B. No shared passwords — just a secure, audited QRC handshake.</p>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">📊</div>
+      <h3>Full Audit Trail</h3>
+      <p>Every encrypt, decrypt, download and login is logged with timestamps and IP addresses for complete accountability.</p>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">🗄️</div>
+      <h3>PostgreSQL Storage</h3>
+      <p>Encrypted blobs live permanently inside a PostgreSQL database — reliable, scalable, and instantly queryable.</p>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">⚙️</div>
+      <h3>Admin Oversight</h3>
+      <p>Administrators see every user, transaction, and activity across the entire platform in real time.</p>
+    </div>
+  </div>
+
+  <div style="text-align:center; padding:2rem 0; border-top:1px solid var(--border);">
+    <p class="text-muted" style="font-size:.85rem;">
+      Building Quantum-Resistant Cybersecurity System &nbsp;·&nbsp; 2026 &nbsp;·&nbsp;
+      Powered by Fernet + PostgreSQL
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="QuantumVault — Military-grade quantum-resistant cryptographic security platform for secure cross-company data transfer."/>
+  <title>{% block title %}QuantumVault{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>"/>
+</head>
+<body>
+
+{% if current_user.is_authenticated %}
+<nav class="qv-nav">
+  <a href="{{ url_for('auth.index') }}" class="nav-brand">
+    <div class="brand-icon">🔐</div>
+    Quantum<span>Vault</span>
+  </a>
+  <div class="nav-links">
+    <a href="{{ url_for('dashboard.index') }}">⬡ Dashboard</a>
+    <a href="{{ url_for('crypto.encrypt_page') }}">🔒 Encrypt</a>
+    <a href="{{ url_for('crypto.decrypt_page') }}">🔓 Decrypt</a>
+    <a href="{{ url_for('crypto.history') }}">📋 History</a>
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('admin.dashboard') }}" style="color:var(--amber);">⚙ Admin</a>
+    {% endif %}
+  </div>
+  <div class="nav-right">
+    <div class="nav-user">
+      <div class="avatar">{{ current_user.username[0].upper() }}</div>
+      <span>{{ current_user.username }}</span>
+      {% if current_user.role == 'admin' %}<span class="badge badge-amber" style="font-size:.65rem;">ADMIN</span>{% endif %}
+    </div>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">Logout</a>
+  </div>
+</nav>
+{% endif %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-wrap" style="padding:.75rem 1.5rem 0; position:relative; z-index:50;">
+  {% for cat, msg in messages %}
+  <div class="alert alert-{{ cat }}">
+    {% if cat == 'success' %}✅{% elif cat == 'danger' %}❌{% elif cat == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

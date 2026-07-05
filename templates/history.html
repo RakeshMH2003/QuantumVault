@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}History — QuantumVault{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <div class="page-header fade-up">
+    <h1>📋 My History</h1>
+    <p>All encryptions you created and your full activity log.</p>
+  </div>
+
+  <!-- Encrypted Files -->
+  <div class="section-title fade-up">🔒 Your Encrypted Payloads ({{ records|length }})</div>
+  {% if records %}
+  <div class="tbl-wrap mb-3 fade-up">
+    <table>
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>QRC Code</th>
+          <th>Size</th>
+          <th>Decrypts</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.icon }} {{ r.original_filename }}</td>
+          <td><span class="mono badge badge-cyan" style="font-size:.7rem;">{{ r.qrc_code }}</span></td>
+          <td>{{ r.humansize }}</td>
+          <td>{{ r.decrypt_count }}</td>
+          <td>{{ r.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <a href="{{ url_for('crypto.download_file', code=r.qrc_code) }}" class="btn btn-ghost btn-sm">⬇️ Download</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card text-center mb-3 fade-up" style="padding:2.5rem;">
+    <div style="font-size:2.5rem; margin-bottom:1rem; opacity:.5;">🔒</div>
+    <p class="text-muted">No encryptions yet. <a href="{{ url_for('crypto.encrypt_page') }}" style="color:var(--cyan);">Encrypt your first file →</a></p>
+  </div>
+  {% endif %}
+
+  <!-- Activity Log -->
+  <div class="section-title fade-up">📌 Activity Log ({{ logs|length }})</div>
+  {% if logs %}
+  <div class="tbl-wrap fade-up">
+    <table>
+      <thead>
+        <tr><th>Action</th><th>Detail</th><th>QRC</th><th>IP</th><th>Status</th><th>Time</th></tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>
+            <span class="badge {% if log.action == 'ENCRYPT' %}badge-cyan{% elif log.action == 'DECRYPT' %}badge-purple{% elif log.action == 'LOGIN' %}badge-green{% elif log.action == 'DOWNLOAD' %}badge-amber{% else %}badge-cyan{% endif %}">
+              {{ log.action }}
+            </span>
+          </td>
+          <td style="color:var(--fg-dim); max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ log.detail or '—' }}</td>
+          <td><span class="mono" style="font-size:.78rem; color:var(--cyan);">{{ log.qrc_code or '—' }}</span></td>
+          <td style="font-size:.78rem; color:var(--fg-dim);">{{ log.ip_address or '—' }}</td>
+          <td><span class="badge {% if log.status == 'FAILED' %}badge-red{% else %}badge-green{% endif %}">{{ log.status }}</span></td>
+          <td style="font-size:.8rem; white-space:nowrap;">{{ log.timestamp.strftime('%d %b · %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card text-center fade-up" style="padding:2rem;"><p class="text-muted">No activity logged yet.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — QuantumVault{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <div class="page-header fade-up flex-between flex-wrap" style="gap:1rem;">
+    <div>
+      <h1>Welcome back, {{ current_user.username }} 👋</h1>
+      <p>{{ current_user.company or 'QuantumVault User' }} &nbsp;·&nbsp;
+        {% if current_user.last_login %}Last login: {{ current_user.last_login.strftime('%d %b %Y · %H:%M') }}{% endif %}
+      </p>
+    </div>
+    <div class="flex" style="gap:.75rem; flex-wrap:wrap;">
+      <a href="{{ url_for('crypto.encrypt_page') }}" class="btn btn-primary">🔒 New Encryption</a>
+      <a href="{{ url_for('crypto.decrypt_page') }}" class="btn btn-purple">🔓 Decrypt Data</a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid mb-3 fade-up">
+    <div class="stat-card">
+      <div class="stat-icon">🔒</div>
+      <div class="stat-value">{{ total_encrypted }}</div>
+      <div class="stat-label">Files Encrypted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔓</div>
+      <div class="stat-value">{{ total_decrypted }}</div>
+      <div class="stat-label">Times Decrypted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⬇️</div>
+      <div class="stat-value">{{ total_downloads }}</div>
+      <div class="stat-label">Downloads</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🏢</div>
+      <div class="stat-value" style="font-size:1.3rem; -webkit-text-fill-color:var(--cyan);">{{ current_user.company or '—' }}</div>
+      <div class="stat-label">Your Company</div>
+    </div>
+  </div>
+
+  <div class="grid-2 fade-up">
+    <!-- Recent Encryptions -->
+    <div class="card">
+      <div class="section-title">🔒 Recent Encryptions</div>
+      {% if recent_encrypted %}
+        {% for r in recent_encrypted %}
+        <div style="padding:.75rem 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+          <div>
+            <div style="font-weight:600; font-size:.9rem;">{{ r.original_filename }}</div>
+            <div style="font-size:.78rem; color:var(--fg-dim);">{{ r.created_at.strftime('%d %b %Y · %H:%M') }}</div>
+          </div>
+          <span class="badge badge-cyan mono" style="font-size:.7rem; letter-spacing:.06em;">{{ r.qrc_code }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted" style="font-size:.9rem; padding:1rem 0;">No encryptions yet. <a href="{{ url_for('crypto.encrypt_page') }}" style="color:var(--cyan);">Encrypt something</a></p>
+      {% endif %}
+    </div>
+
+    <!-- Activity Log -->
+    <div class="card">
+      <div class="section-title">📋 Recent Activity</div>
+      {% if recent_logs %}
+        {% for log in recent_logs %}
+        <div style="padding:.6rem 0; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:.75rem;">
+          <span style="font-size:1rem; flex-shrink:0;">
+            {% if log.action == 'ENCRYPT' %}🔒{% elif log.action == 'DECRYPT' %}🔓{% elif log.action == 'LOGIN' %}🔑{% elif log.action == 'DOWNLOAD' %}⬇️{% else %}📌{% endif %}
+          </span>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:.82rem; color:var(--fg);">{{ log.detail or log.action }}</div>
+            <div style="font-size:.75rem; color:var(--fg-dim);">{{ log.timestamp.strftime('%d %b · %H:%M') }}</div>
+          </div>
+          <span class="badge {% if log.status == 'FAILED' %}badge-red{% else %}badge-green{% endif %}" style="font-size:.65rem;">{{ log.status }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted" style="font-size:.9rem; padding:1rem 0;">No activity yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}All Transactions — QuantumVault Admin{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <div class="page-header fade-up flex-between">
+    <div>
+      <h1>📋 All Transactions</h1>
+      <p>Complete system-wide audit trail — every action logged.</p>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost">← Admin Home</a>
+  </div>
+
+  <div class="tbl-wrap fade-up">
+    <table>
+      <thead>
+        <tr><th>#</th><th>User</th><th>Action</th><th>Detail</th><th>QRC Code</th><th>IP Address</th><th>Status</th><th>Timestamp</th></tr>
+      </thead>
+      <tbody>
+        {% for log in logs.items %}
+        <tr>
+          <td style="color:var(--fg-dim); font-size:.8rem;">{{ log.id }}</td>
+          <td style="font-weight:600; font-size:.85rem;">{{ log.user.username if log.user else '—' }}</td>
+          <td>
+            <span class="badge {% if log.action == 'ENCRYPT' %}badge-cyan{% elif log.action == 'DECRYPT' %}badge-purple{% elif log.action == 'LOGIN' or log.action == 'REGISTER' %}badge-green{% elif log.action == 'DOWNLOAD' %}badge-amber{% else %}badge-cyan{% endif %}">
+              {{ log.action }}
+            </span>
+          </td>
+          <td style="font-size:.8rem; color:var(--fg-dim); max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ log.detail or '—' }}</td>
+          <td><span class="mono" style="font-size:.75rem; color:var(--cyan);">{{ log.qrc_code or '—' }}</span></td>
+          <td class="ip-cell" data-ip="{{ log.ip_address or '' }}" style="font-size:.78rem; color:var(--fg-dim);">
+            <span class="ip-text">{{ log.ip_address or '—' }}</span>
+            <span class="ip-location" style="display:block; font-size:.7rem; color:var(--cyan); margin-top:.2rem;"></span>
+          </td>
+          <td><span class="badge {% if log.status == 'FAILED' %}badge-red{% else %}badge-green{% endif %}">{{ log.status }}</span></td>
+          <td style="font-size:.78rem; white-space:nowrap;">{{ log.timestamp.strftime('%d %b %Y · %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="flex mt-3" style="gap:.5rem; flex-wrap:wrap;">
+    {% if logs.has_prev %}
+      <a href="{{ url_for('admin.transactions', page=logs.prev_num) }}" class="btn btn-ghost btn-sm">← Prev</a>
+    {% endif %}
+    <span style="padding:.45rem .9rem; color:var(--fg-dim); font-size:.85rem;">Page {{ logs.page }} of {{ logs.pages }}</span>
+    {% if logs.has_next %}
+      <a href="{{ url_for('admin.transactions', page=logs.next_num) }}" class="btn btn-ghost btn-sm">Next →</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cache = {};
+  
+  document.querySelectorAll('.ip-cell').forEach(cell => {
+    const ip = cell.dataset.ip;
+    const locSpan = cell.querySelector('.ip-location');
+    
+    // Skip empty or localhost
+    if (!ip || ip === '127.0.0.1' || ip === 'localhost') {
+      if (locSpan) locSpan.textContent = 'Localhost (Dev)';
+      return;
+    }
+
+    if (cache[ip]) {
+      locSpan.textContent = cache[ip];
+      return;
+    }
+
+    // Rate-limited API endpoint for IP details
+    fetch(`http://ip-api.com/json/${ip}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          const loc = `📍 ${data.city}, ${data.country}`;
+          locSpan.textContent = loc;
+          cache[ip] = loc;
+        } else {
+          locSpan.textContent = 'Unknown location';
+        }
+      })
+      .catch(() => {
+        locSpan.textContent = 'Lookup failed';
+      });
+  });
+});
+</script>
+{% endblock %}

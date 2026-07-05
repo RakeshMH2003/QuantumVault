@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Decrypt Data — QuantumVault{% endblock %}
+{% block content %}
+<div class="page-wrap" style="max-width:760px;">
+  <div class="page-header fade-up">
+    <h1>🔓 Decrypt Data</h1>
+    <p>Enter the QRC code shared with you by the sender. Your credentials authorize the decryption.</p>
+  </div>
+
+  <!-- Input Form -->
+  <div class="card fade-up mb-3">
+    <form method="POST" action="{{ url_for('crypto.decrypt_page') }}" data-loading>
+      <div class="form-group">
+        <label class="form-label">🔑 QRC Code</label>
+        <input type="text" name="qrc_code" class="form-control mono"
+               placeholder="QRC-XXXX-XXXX-XXXX"
+               value="{{ request.form.get('qrc_code', '') }}"
+               style="font-size:1.1rem; letter-spacing:.08em; text-transform:uppercase;"
+               autocomplete="off" autofocus required/>
+        <p style="font-size:.8rem; color:var(--fg-dim); margin-top:.4rem;">
+          The code was sent to you by the data sender. It looks like <span class="mono" style="color:var(--cyan);">QRC-A1B2-C3D4-E5F6</span>
+        </p>
+      </div>
+      <button type="submit" class="btn btn-purple btn-full btn-lg">
+        <span class="spin"></span>
+        <span class="btn-text">🔓 Decrypt &amp; View Data</span>
+      </button>
+    </form>
+  </div>
+
+  {% if result %}
+  <!-- Decrypted Result -->
+  <div class="card fade-up glow mb-3" style="border-color:rgba(16,185,129,.4);">
+    <div class="success-banner" style="margin-bottom:1.5rem;">
+      <span class="check">🔓</span>
+      <div>
+        <div style="font-weight:700;">Decrypted Successfully</div>
+        <div style="font-size:.875rem; color:var(--fg-dim);">
+          {{ result.icon }} {{ result.rec.original_filename }} &nbsp;·&nbsp; {{ result.size }}
+          &nbsp;·&nbsp; Sent by <strong style="color:var(--cyan);">{{ result.sender.username }}</strong>
+          {% if result.sender.company %} ({{ result.sender.company }}){% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Description from sender -->
+    {% if result.rec.description %}
+    <div style="background:var(--cyan-dim); border:1px solid var(--border-strong); border-radius:var(--r-sm);
+                padding:.75rem 1rem; margin-bottom:1.25rem; font-size:.9rem;">
+      💬 <strong>Sender's note:</strong> {{ result.rec.description }}
+    </div>
+    {% endif %}
+
+    <!-- Preview -->
+    {% if result.preview_type == 'text' %}
+    <div class="preview-wrap">
+      <div class="preview-header">📝 Decrypted Content</div>
+      <div class="preview-body"><pre class="preview-text">{{ result.preview_data }}</pre></div>
+    </div>
+    {% elif result.preview_type == 'image' %}
+    <div class="preview-wrap">
+      <div class="preview-header">🖼️ Image Preview</div>
+      <div class="preview-body"><img src="{{ result.preview_data }}" alt="Decrypted image"/></div>
+    </div>
+    {% elif result.preview_type == 'pdf' %}
+    <div class="preview-wrap">
+      <div class="preview-header">📄 PDF Preview</div>
+      <div class="preview-body"><iframe src="{{ result.preview_data }}"></iframe></div>
+    </div>
+    {% endif %}
+
+    <!-- Download Permission Card -->
+    <div class="permission-card mt-3">
+      <div class="perm-icon">⬇️</div>
+      <div style="flex:1;">
+        <div style="font-weight:700; color:var(--amber);">Download Original File</div>
+        <div style="font-size:.875rem; color:var(--fg-dim); margin:.25rem 0 .75rem;">
+          Click below to download <strong>{{ result.rec.original_filename }}</strong> to your device.
+        </div>
+        <a href="{{ url_for('crypto.download_file', code=result.rec.qrc_code) }}" class="btn btn-primary">
+          ⬇️ Download File
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="flex mt-2" style="gap:1rem; flex-wrap:wrap;">
+    <a href="{{ url_for('crypto.encrypt_page') }}" class="btn btn-ghost">🔒 Encrypt Something</a>
+    <a href="{{ url_for('dashboard.index') }}"      class="btn btn-ghost">⬡ Dashboard</a>
+  </div>
+</div>
+{% endblock %}
