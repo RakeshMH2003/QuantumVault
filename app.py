@@ -1,5 +1,6 @@
 import os
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
 from models.models import db
 from utils.authentication import login_manager, bcrypt
 from routes.auth import auth_bp
@@ -9,6 +10,8 @@ from routes.admin import admin_bp
 
 def create_app():
     app = Flask(__name__)
+    # Trust Render's proxy so X-Forwarded-For gives the real client IP
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     # ── Security ─────────────────────────────────────────────────────────────
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'quantumvault-ultra-secret-key-2026-qrc')

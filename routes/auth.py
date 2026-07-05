@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from models.models import db, User
-from utils.authentication import bcrypt, log_activity
+from utils.authentication import bcrypt, log_activity, get_real_ip
 from datetime import datetime
 
 auth_bp = Blueprint('auth', __name__)
@@ -29,11 +29,12 @@ def login():
             login_user(user, remember=True)
             user.last_login = datetime.utcnow()
             db.session.commit()
-            log_activity(user.id, 'LOGIN', f'User logged in from {request.remote_addr}', ip=request.remote_addr)
+            real_ip = get_real_ip()
+            log_activity(user.id, 'LOGIN', f'User logged in from {real_ip}', ip=real_ip)
             return redirect(url_for('dashboard.index'))
         flash('Invalid username or password.', 'danger')
         log_activity(user.id if user else 0, 'LOGIN', f'Failed login for {username}',
-                     ip=request.remote_addr, status='FAILED')
+                     ip=get_real_ip(), status='FAILED')
     return render_template('login.html')
 
 
@@ -64,7 +65,7 @@ def register():
             db.session.add(user)
             db.session.commit()
             login_user(user)
-            log_activity(user.id, 'REGISTER', f'New user registered: {username}', ip=request.remote_addr)
+            log_activity(user.id, 'REGISTER', f'New user registered: {username}', ip=get_real_ip())
             flash('Account created! Welcome to QuantumVault.', 'success')
             return redirect(url_for('dashboard.index'))
     return render_template('register.html')
@@ -73,7 +74,7 @@ def register():
 @auth_bp.route('/logout')
 @login_required
 def logout():
-    log_activity(current_user.id, 'LOGOUT', ip=request.remote_addr)
+    log_activity(current_user.id, 'LOGOUT', ip=get_real_ip())
     logout_user()
     flash('You have been securely logged out.', 'info')
     return redirect(url_for('auth.login'))

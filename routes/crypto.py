@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, flash, redirect, url_for, send_file
 from flask_login import login_required, current_user
 from models.models import db, EncryptedData
-from utils.authentication import log_activity
+from utils.authentication import log_activity, get_real_ip
 from utils.encryption import encrypt_data, decrypt_data
 
 crypto_bp = Blueprint('crypto', __name__)
@@ -78,7 +78,7 @@ def encrypt_page():
             db.session.commit()
             log_activity(current_user.id, 'ENCRYPT',
                          f'Encrypted "{fname}" ({_human_size(len(raw))})',
-                         qrc_code=code, ip=request.remote_addr)
+                         qrc_code=code, ip=get_real_ip())
             return render_template('encrypt_success.html',
                 code=code,
                 fname=fname,
@@ -111,7 +111,7 @@ def decrypt_page():
         if not rec:
             log_activity(current_user.id, 'DECRYPT',
                          f'Invalid QRC code attempted: {code}',
-                         qrc_code=code, ip=request.remote_addr, status='FAILED')
+                         qrc_code=code, ip=get_real_ip(), status='FAILED')
             flash('Invalid QRC code. Please check and try again.', 'danger')
         elif not rec.is_active:
             flash('This QRC code has been revoked by the sender.', 'warning')
@@ -126,7 +126,7 @@ def decrypt_page():
 
                 log_activity(current_user.id, 'DECRYPT',
                              f'Decrypted "{rec.original_filename}" (QRC: {code})',
-                             qrc_code=code, ip=request.remote_addr)
+                             qrc_code=code, ip=get_real_ip())
 
                 # Build preview
                 mime = rec.mime_type
@@ -155,7 +155,7 @@ def decrypt_page():
                 db.session.rollback()
                 log_activity(current_user.id, 'DECRYPT',
                              f'Decryption failed for {code}: {e}',
-                             qrc_code=code, ip=request.remote_addr, status='FAILED')
+                             qrc_code=code, ip=get_real_ip(), status='FAILED')
                 flash(f'Decryption failed: {e}', 'danger')
 
     return render_template('decrypt.html', result=result)
@@ -170,7 +170,7 @@ def download_file(code):
     dec_bytes = decrypt_data(rec.encrypted_blob)
     log_activity(current_user.id, 'DOWNLOAD',
                  f'Downloaded "{rec.original_filename}" (QRC: {code})',
-                 qrc_code=code, ip=request.remote_addr)
+                 qrc_code=code, ip=get_real_ip())
     return send_file(
         io.BytesIO(dec_bytes),
         as_attachment=True,
