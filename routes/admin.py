@@ -19,6 +19,12 @@ def dashboard():
                    .order_by(ActivityLog.timestamp.desc())
                    .limit(30).all())
 
+    # QRC-related activity only (ENCRYPT / DECRYPT / DOWNLOAD with a QRC code)
+    qrc_logs = (ActivityLog.query
+                .filter(ActivityLog.qrc_code.isnot(None))
+                .order_by(ActivityLog.timestamp.desc())
+                .limit(50).all())
+
     users = User.query.order_by(User.created_at.desc()).all()
 
     return render_template('admin.html',
@@ -27,6 +33,7 @@ def dashboard():
         total_decrypts=total_decrypts,
         total_downloads=total_downloads,
         recent_logs=recent_logs,
+        qrc_logs=qrc_logs,
         users=users,
     )
 

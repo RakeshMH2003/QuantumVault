@@ -5,7 +5,7 @@
   <div class="page-header fade-up flex-between">
     <div>
       <h1>⚙️ Admin Control Center</h1>
-      <p>Full system overview — all users, transactions, and activity.</p>
+      <p>Full system overview — users, credentials, QRC activity, and audit logs.</p>
     </div>
     <a href="{{ url_for('admin.transactions') }}" class="btn btn-ghost">📋 All Transactions</a>
   </div>
@@ -34,115 +34,203 @@
     </div>
   </div>
 
-  <div class="grid-2 fade-up">
-    <!-- Users Table -->
-    <div class="card" style="overflow:hidden; padding:0;">
-      <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border);">
-        <div class="section-title" style="margin-bottom:0;">👥 Registered Users</div>
-      </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr><th>User</th><th>Company</th><th>Role</th><th>Joined</th><th>Status</th><th>Action</th></tr>
-          </thead>
-          <tbody>
-            {% for u in users %}
-            <tr>
-              <td>
-                <div style="font-weight:600;">{{ u.username }}</div>
-                <div style="font-size:.75rem; color:var(--fg-dim);">{{ u.email }}</div>
-              </td>
-              <td style="font-size:.85rem;">{{ u.company or '—' }}</td>
-              <td><span class="badge {% if u.role == 'admin' %}badge-amber{% else %}badge-cyan{% endif %}">{{ u.role }}</span></td>
-              <td style="font-size:.8rem; white-space:nowrap;">{{ u.created_at.strftime('%d %b %Y') }}</td>
-              <td><span class="badge {% if u.is_active %}badge-green{% else %}badge-red{% endif %}">{{ 'Active' if u.is_active else 'Disabled' }}</span></td>
-              <td>
-                {% if u.role != 'admin' %}
-                <form method="POST" action="{{ url_for('admin.toggle_user', uid=u.id) }}" style="margin:0;">
-                  <button type="submit" class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-ghost{% endif %}">
-                    {{ 'Disable' if u.is_active else 'Enable' }}
-                  </button>
-                </form>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+  <!-- ═══════════════════ USER CREDENTIALS TABLE ═══════════════════ -->
+  <div class="card fade-up" style="overflow:hidden; padding:0; margin-bottom:1.5rem;">
+    <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+      <div class="section-title" style="margin-bottom:0;">🔑 Registered User Credentials</div>
+      <span class="badge badge-amber">Admin Only</span>
     </div>
-
-    <!-- Recent Activity -->
-    <div class="card" style="overflow:hidden; padding:0;">
-      <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border);">
-        <div class="section-title" style="margin-bottom:0;">📋 Recent System Activity</div>
-      </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr><th>User</th><th>Action</th><th>Detail</th><th>IP Address</th><th>Status</th><th>Time</th></tr>
-          </thead>
-          <tbody>
-            {% for log in recent_logs %}
-            <tr>
-              <td style="font-size:.82rem;">{{ log.user.username if log.user else 'System' }}</td>
-              <td>
-                <span class="badge {% if log.action == 'ENCRYPT' %}badge-cyan{% elif log.action == 'DECRYPT' %}badge-purple{% elif log.action == 'LOGIN' %}badge-green{% elif log.action == 'DOWNLOAD' %}badge-amber{% else %}badge-cyan{% endif %}">
-                  {{ log.action }}
-                </span>
-              </td>
-              <td style="font-size:.78rem; color:var(--fg-dim); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ log.detail or '—' }}</td>
-              <td class="ip-cell" data-ip="{{ log.ip_address or '' }}" style="font-size:.78rem; color:var(--fg-dim);">
-                <span class="ip-text">{{ log.ip_address or '—' }}</span>
-                <span class="ip-location" style="display:block; font-size:.7rem; color:var(--cyan); margin-top:.2rem;"></span>
-              </td>
-              <td><span class="badge {% if log.status == 'FAILED' %}badge-red{% else %}badge-green{% endif %}">{{ log.status }}</span></td>
-              <td style="font-size:.78rem; white-space:nowrap;">{{ log.timestamp.strftime('%d %b · %H:%M') }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>#ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Company</th>
+            <th>Role</th>
+            <th>Password Hash</th>
+            <th>Joined</th>
+            <th>Last Login</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td style="font-size:.8rem; color:var(--fg-dim);">#{{ u.id }}</td>
+            <td>
+              <div style="font-weight:700; display:flex; align-items:center; gap:.5rem;">
+                <div style="width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,var(--cyan),var(--purple)); display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:800;">{{ u.username[0].upper() }}</div>
+                {{ u.username }}
+              </div>
+            </td>
+            <td style="font-size:.82rem; color:var(--cyan);">{{ u.email }}</td>
+            <td style="font-size:.82rem;">{{ u.company or '—' }}</td>
+            <td><span class="badge {% if u.role == 'admin' %}badge-amber{% else %}badge-cyan{% endif %}">{{ u.role }}</span></td>
+            <td>
+              <div style="font-family:var(--mono); font-size:.65rem; color:var(--fg-dim); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; background:rgba(0,0,0,.3); padding:.25rem .5rem; border-radius:4px; cursor:pointer;" title="{{ u.password_hash }}" onclick="copyToClipboard('{{ u.password_hash }}', this)">
+                {{ u.password_hash[:30] }}...
+              </div>
+            </td>
+            <td style="font-size:.8rem; white-space:nowrap;">{{ u.created_at.strftime('%d %b %Y') }}</td>
+            <td style="font-size:.8rem; white-space:nowrap;">{{ u.last_login.strftime('%d %b · %H:%M') if u.last_login else '—' }}</td>
+            <td><span class="badge {% if u.is_active %}badge-green{% else %}badge-red{% endif %}">{{ 'Active' if u.is_active else 'Disabled' }}</span></td>
+            <td>
+              {% if u.role != 'admin' %}
+              <form method="POST" action="{{ url_for('admin.toggle_user', uid=u.id) }}" style="margin:0;">
+                <button type="submit" class="btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-ghost{% endif %}">
+                  {{ 'Disable' if u.is_active else 'Enable' }}
+                </button>
+              </form>
+              {% else %}
+              <span style="font-size:.75rem; color:var(--fg-dim);">Protected</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
+
+  <!-- ═══════════════════ QRC CODE ACTIVITY TABLE ═══════════════════ -->
+  <div class="card fade-up" style="overflow:hidden; padding:0; margin-bottom:1.5rem;">
+    <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+      <div class="section-title" style="margin-bottom:0;">🔐 QRC Code Activity Monitor</div>
+      <span class="badge badge-cyan">{{ qrc_logs|length }} Records</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>QRC Code</th>
+            <th>Action</th>
+            <th>File / Detail</th>
+            <th>IP Address</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in qrc_logs %}
+          <tr>
+            <td style="font-size:.82rem; font-weight:600;">{{ log.user.username if log.user else 'System' }}</td>
+            <td>
+              {% if log.qrc_code %}
+              <span style="font-family:var(--mono); font-size:.75rem; background:var(--cyan-dim); color:var(--cyan); padding:.2rem .5rem; border-radius:4px; letter-spacing:.05em;">{{ log.qrc_code }}</span>
+              {% else %}
+              <span style="color:var(--fg-dim);">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge {% if log.action == 'ENCRYPT' %}badge-cyan{% elif log.action == 'DECRYPT' %}badge-purple{% elif log.action == 'DOWNLOAD' %}badge-amber{% else %}badge-green{% endif %}">
+                {{ log.action }}
+              </span>
+            </td>
+            <td style="font-size:.78rem; color:var(--fg-dim); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ log.detail or '—' }}</td>
+            <td class="ip-cell" data-ip="{{ log.ip_address or '' }}" style="font-size:.78rem; color:var(--fg-dim);">
+              <span class="ip-text">{{ log.ip_address or '—' }}</span>
+            </td>
+            <td>
+              <span class="ip-location qrc-loc" data-ip="{{ log.ip_address or '' }}" style="font-size:.75rem; color:var(--cyan);">Resolving...</span>
+            </td>
+            <td><span class="badge {% if log.status == 'FAILED' %}badge-red{% else %}badge-green{% endif %}">{{ log.status }}</span></td>
+            <td style="font-size:.78rem; white-space:nowrap;">{{ log.timestamp.strftime('%d %b · %H:%M') }}</td>
+          </tr>
+          {% endfor %}
+          {% if not qrc_logs %}
+          <tr><td colspan="8" style="text-align:center; color:var(--fg-dim); padding:2rem;">No QRC activity recorded yet.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ RECENT ACTIVITY LOG ═══════════════════ -->
+  <div class="card fade-up" style="overflow:hidden; padding:0;">
+    <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border);">
+      <div class="section-title" style="margin-bottom:0;">📋 Recent System Activity</div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr><th>User</th><th>Action</th><th>Detail</th><th>IP Address</th><th>Status</th><th>Time</th></tr>
+        </thead>
+        <tbody>
+          {% for log in recent_logs %}
+          <tr>
+            <td style="font-size:.82rem;">{{ log.user.username if log.user else 'System' }}</td>
+            <td>
+              <span class="badge {% if log.action == 'ENCRYPT' %}badge-cyan{% elif log.action == 'DECRYPT' %}badge-purple{% elif log.action == 'LOGIN' %}badge-green{% elif log.action == 'DOWNLOAD' %}badge-amber{% else %}badge-cyan{% endif %}">
+                {{ log.action }}
+              </span>
+            </td>
+            <td style="font-size:.78rem; color:var(--fg-dim); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ log.detail or '—' }}</td>
+            <td class="ip-cell" data-ip="{{ log.ip_address or '' }}" style="font-size:.78rem; color:var(--fg-dim);">
+              <span class="ip-text">{{ log.ip_address or '—' }}</span>
+              <span class="ip-location" style="display:block; font-size:.7rem; color:var(--cyan); margin-top:.2rem;"></span>
+            </td>
+            <td><span class="badge {% if log.status == 'FAILED' %}badge-red{% else %}badge-green{% endif %}">{{ log.status }}</span></td>
+            <td style="font-size:.78rem; white-space:nowrap;">{{ log.timestamp.strftime('%d %b · %H:%M') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// ── Copy to clipboard helper ───────────────────────────────────
+function copyToClipboard(text, el) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = el.textContent;
+    el.textContent = '✅ Copied!';
+    el.style.color = 'var(--green)';
+    setTimeout(() => { el.textContent = orig; el.style.color = ''; }, 1500);
+  });
+}
+
+// ── IP GeoLocation resolver ────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const cache = {};
-  
+
+  function resolveIP(ip, callback) {
+    if (!ip || ip === '127.0.0.1' || ip === 'localhost') {
+      callback('💻 Localhost (Dev)'); return;
+    }
+    if (cache[ip]) { callback(cache[ip]); return; }
+    fetch(`https://ip-api.com/json/${ip}`)
+      .then(r => r.json())
+      .then(data => {
+        const loc = data.status === 'success'
+          ? `📍 ${data.city}, ${data.country}`
+          : 'Unknown location';
+        cache[ip] = loc;
+        callback(loc);
+      })
+      .catch(() => callback('Lookup failed'));
+  }
+
+  // Recent activity log IP locations
   document.querySelectorAll('.ip-cell').forEach(cell => {
     const ip = cell.dataset.ip;
     const locSpan = cell.querySelector('.ip-location');
-    
-    // Skip empty or localhost
-    if (!ip || ip === '127.0.0.1' || ip === 'localhost') {
-      if (locSpan) locSpan.textContent = 'Localhost (Dev)';
-      return;
-    }
+    if (locSpan) resolveIP(ip, loc => locSpan.textContent = loc);
+  });
 
-    if (cache[ip]) {
-      locSpan.textContent = cache[ip];
-      return;
-    }
-
-    // Rate-limited API endpoint for IP details
-    fetch(`http://ip-api.com/json/${ip}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.status === 'success') {
-          const loc = `📍 ${data.city}, ${data.country}`;
-          locSpan.textContent = loc;
-          cache[ip] = loc;
-        } else {
-          locSpan.textContent = 'Unknown location';
-        }
-      })
-      .catch(() => {
-        locSpan.textContent = 'Lookup failed';
-      });
+  // QRC Activity IP locations
+  document.querySelectorAll('.qrc-loc').forEach(span => {
+    const ip = span.dataset.ip;
+    if (ip) resolveIP(ip, loc => span.textContent = loc);
+    else span.textContent = '—';
   });
 });
 </script>
