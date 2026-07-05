@@ -1,50 +1,74 @@
-# Quantum-Resistant Cybersecurity System
+<div align="center">
+  <h1>🛡️ QuantumVault</h1>
+  <p><b>Military-Grade Quantum Cryptographic Security Platform</b></p>
 
-A comprehensive web application demonstrating secure authentication, data storage, and post-quantum cryptographic concepts. Built with Flask, SQLite, and Vanilla HTML/CSS/JS.
+  <img src="https://img.shields.io/badge/Python-3.11+-blue.svg" alt="Python Version">
+  <img src="https://img.shields.io/badge/Flask-3.0.2-green.svg" alt="Flask Framework">
+  <img src="https://img.shields.io/badge/Database-PostgreSQL-blue.svg" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Security-Fernet_Symmetric-red.svg" alt="Fernet Security">
+</div>
 
-## Features
-- **Secure Authentication**: Utilizing bcrypt for password hashing and robust session management.
-- **Post-Quantum Cryptography**: A modular encryption architecture designed to integrate `liboqs` (CRYSTALS-Kyber). Includes a fully functional AES-256-GCM fallback for immediate usage on systems without complex C-compilers.
-- **Role-Based Access Control**: Admin dashboards for system oversight vs regular user vaults.
-- **Activity Logging**: Comprehensive audit trails of user actions and IP addresses.
-- **Modern UI/UX**: A responsive, dark cybersecurity theme utilizing glassmorphism and custom CSS styling.
+<hr>
 
-## Installation & Setup
+## 🚀 What is QuantumVault?
+QuantumVault is a cutting-edge web application designed to facilitate **secure, region-agnostic data sharing** between different entities, such as cross-company employees or disparate geographical branches. By utilizing military-grade symmetric encryption, it ensures that your sensitive text and files remain unreadable to anyone without explicit authorization.
 
-1. **Navigate to the Project Directory**
-   Ensure you are in the `Quantum-Resistant-Cybersecurity-System` folder.
+## 🌟 How it Provides Services to Users
 
-2. **Create a Virtual Environment**
+### 1. 🔐 Data Encryption
+Users can securely log in to the application and choose to encrypt sensitive information. 
+- You enter your secret data or upload sensitive files.
+- QuantumVault immediately encrypts this data on the server side using the highly secure **Fernet** algorithm.
+- Upon successful encryption, the system generates a **Unique QRC Code**.
+
+### 2. 📡 Secure Cross-Company Transfer
+The real power of QuantumVault lies in its transfer mechanism. 
+- The user who encrypted the data takes the generated **QRC Code** and shares it securely (via secure email, physical handoff, etc.) with the intended recipient at another company or location.
+- The encrypted data itself is safely stored in our PostgreSQL database and *never leaves the vault*.
+
+### 3. 🔓 Decryption & Retrieval
+The recipient, who is also an authorized user of QuantumVault:
+- Logs into their own account on the platform.
+- Navigates to the **Decrypt Data** section.
+- Enters the shared **QRC Code**.
+- The system validates the code, instantly decrypts the data in memory, and presents the secret information or provides a secure download link for the file.
+
+### 4. 👁️ Complete Audit Trail (Admin Protection)
+For maximum security and accountability, QuantumVault features a robust **Admin Control Center**.
+- Every single action (Logins, Encryptions, Decryptions, Downloads) is meticulously logged.
+- The system automatically captures the **Real IP Address** of the user (even bypassing proxies) and performs a real-time **Geographic Location Lookup** (City/Country).
+- Administrators can review the entire transaction history to ensure no unauthorized access is occurring.
+
+---
+
+## 🛠️ Technology Stack
+* **Frontend**: HTML5, Vanilla CSS (Custom Glassmorphism Design), Vanilla JavaScript (IntersectionObserver, Custom Cursors, 3D Tilt).
+* **Backend**: Python 3, Flask Application Factory, Flask-SQLAlchemy, Flask-Login.
+* **Cryptography**: `cryptography.fernet` module.
+* **Database**: PostgreSQL for persistent, robust data storage.
+
+## ⚙️ Quick Start Guide
+
+### 1. Requirements
+- Python 3.10+
+- PostgreSQL Server running locally or remotely
+
+### 2. Installation
+1. Clone this repository:
    ```bash
-   python -m venv venv
-   # On Windows:
-   venv\Scripts\activate
-   # On Mac/Linux:
-   # source venv/bin/activate
+   git clone https://github.com/RakeshMH2003/QuantumVault.git
    ```
-
-3. **Install Dependencies**
+2. Run the automated startup script (Windows):
    ```bash
-   pip install -r requirements.txt
+   run.bat
    ```
+   *Note: This script will automatically create a virtual environment, install all dependencies from `requirements.txt`, and start the Flask server on `http://127.0.0.1:5000`.*
 
-4. **(Optional) Install liboqs for true Post-Quantum Crypto**
-   To enable true Kyber KEM, you must build the `liboqs` C library and install the `liboqs-python` wrapper. The system will automatically detect its presence and switch algorithms. Without it, the system safely falls back to strong AES-256-GCM encryption.
+### 3. Default Admin Credentials
+* **Username**: `admin`
+* **Password**: `Admin@2026`
 
-5. **Run the Application**
-   ```bash
-   python app.py
-   ```
-   The SQLite database (`database.db`) will automatically initialize on the first run.
-   
-6. **Access the System**
-   Open your browser and navigate to `http://127.0.0.1:5000`. 
-   *Note: The very first user to register will automatically be granted `admin` privileges.*
-
-## Directory Structure
-- `app.py`: Main application entry point and configuration.
-- `models/`: Database schema definitions (User, ActivityLog, EncryptedData).
-- `routes/`: Blueprint routing logic (auth, dashboard, crypto, admin).
-- `utils/`: Core logic for authentication and the modular encryption system.
-- `templates/`: HTML structures using Jinja2 templating.
-- `static/`: Frontend CSS (dark theme) and JavaScript.
+---
+<div align="center">
+  <i>Built for the next generation of cybersecurity.</i>
+</div>
