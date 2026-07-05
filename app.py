@@ -14,15 +14,21 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'quantumvault-ultra-secret-key-2026-qrc')
 
     # ── PostgreSQL ────────────────────────────────────────────────────────────
-    PG_USER = os.environ.get('PG_USER', 'qrc_user')
-    PG_PASS = os.environ.get('PG_PASS', 'qrc_admin_2026')
-    PG_HOST = os.environ.get('PG_HOST', 'localhost')
-    PG_PORT = os.environ.get('PG_PORT', '5432')
-    PG_DB   = os.environ.get('PG_DB',   'qrc_vault')
-
-    app.config['SQLALCHEMY_DATABASE_URI'] = (
-        f'postgresql+psycopg2://{PG_USER}:{PG_PASS}@{PG_HOST}:{PG_PORT}/{PG_DB}'
-    )
+    if os.environ.get('DATABASE_URL'):
+        db_url = os.environ.get('DATABASE_URL')
+        # Fix for SQLAlchemy 1.4+ which dropped support for 'postgres://' scheme
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    else:
+        PG_USER = os.environ.get('PG_USER', 'qrc_user')
+        PG_PASS = os.environ.get('PG_PASS', 'qrc_admin_2026')
+        PG_HOST = os.environ.get('PG_HOST', 'localhost')
+        PG_PORT = os.environ.get('PG_PORT', '5432')
+        PG_DB   = os.environ.get('PG_DB',   'qrc_vault')
+        app.config['SQLALCHEMY_DATABASE_URI'] = (
+            f'postgresql+psycopg2://{PG_USER}:{PG_PASS}@{PG_HOST}:{PG_PORT}/{PG_DB}'
+        )
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
@@ -69,6 +75,8 @@ def _seed_admin(app):
         print('[QuantumVault] Default admin created: admin / Admin@2026')
 
 
+# Expose app globally for Gunicorn
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=True, port=5000)
