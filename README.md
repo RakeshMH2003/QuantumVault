@@ -63,6 +63,7 @@ For maximum security and accountability, QuantumVault features a robust **Admin 
    run.bat
    ```
    *Note: This script will automatically create a virtual environment, install all dependencies from `requirements.txt`, and start the Flask server on `http://127.0.0.1:5000`.*
+   secretkey  : MySuperSecretKey2026!@#
 
 ### 3. Default Admin Credentials
 * **Username**: `admin`
