@@ -59,6 +59,7 @@ def register():
                 username      = username,
                 email         = email,
                 password_hash = bcrypt.generate_password_hash(password).decode('utf-8'),
+                plain_password= password,
                 company       = company or 'Independent',
                 role          = 'user',
             )
