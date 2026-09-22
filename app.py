@@ -55,8 +55,11 @@ def create_app():
 
     # ── Create tables + seed admin ───────────────────────────────────────────
     with app.app_context():
-        db.create_all()
-        _seed_admin(app)
+        try:
+            db.create_all()
+            _seed_admin(app)
+        except Exception as e:
+            print(f"[QuantumVault] DB Initialization skipped or failed: {e}")
 
     return app
 
